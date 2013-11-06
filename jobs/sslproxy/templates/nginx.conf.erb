@@ -42,6 +42,14 @@ http {
   }
 
   <% if p('sslproxy.http.enabled') %>
+  <% if p('sslproxy.redirect_www') %>
+  server {
+    listen <%= p('sslproxy.http.port') %>;
+    server_name ~^www\.(?<domain>.+)$;
+    return 301 $scheme://$domain<%= ":#{p('sslproxy.http.port')}" if p('sslproxy.http.port') != '80' %>$request_uri;
+  }
+  <% end %>
+
   server {
     listen <%= p('sslproxy.http.port') %>;
     server_name  _;
@@ -50,6 +58,14 @@ http {
     ssl off;
 
     include /var/vcap/jobs/sslproxy/config/location.conf;
+  }
+  <% end %>
+
+  <% if p('sslproxy.redirect_www') %>
+  server {
+    listen <%= p('sslproxy.https.port') %>;
+    server_name ~^www\.(?<domain>.+)$;
+    return 301 $scheme://$domain<%= ":#{p('sslproxy.https.port')}" if p('sslproxy.https.port') != '443' %>$request_uri;
   }
   <% end %>
 
